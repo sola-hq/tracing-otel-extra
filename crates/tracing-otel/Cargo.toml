@@ -64,6 +64,8 @@ otel = ["dep:tracing-opentelemetry-extra"]
 
 # This feature is used to enable the logging integration.
 logger = [
+	"dep:tracing",
+	"dep:opentelemetry",
 	"dep:tracing-subscriber",
 	"dep:tracing-appender",
 	"tracing-opentelemetry-extra/subscriber",

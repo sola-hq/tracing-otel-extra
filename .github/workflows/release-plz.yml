@@ -17,6 +17,7 @@ jobs:
     # if: ${{ github.repository_owner == 'sola-hq' }}
     runs-on: ubuntu-latest
     permissions:
+      id-token: write
       contents: write
     steps:
       - name: Checkout repository

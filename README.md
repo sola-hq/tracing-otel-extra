@@ -19,29 +19,62 @@ A comprehensive collection of tracing and logging utilities for Rust application
 
 ## 🔍 Comparison with `axum-tracing-opentelemetry`
 
-This crate (`tracing-otel-extra` / `axum-otel`) provides a more comprehensive solution compared to `axum-tracing-opentelemetry`. Here are the key differences:
+Both **axum-otel** and **axum-tracing-opentelemetry** are excellent projects in the Axum + OpenTelemetry ecosystem, and they share the same core goal: **making HTTP tracing easier and more reliable for Axum applications**.
 
-| Feature | `axum-otel` | `axum-tracing-opentelemetry` |
-|---------|-------------|------------------------------|
-| **Metrics Collection** | ✅ Built-in metrics collection and OTLP export | ❌ Tracing only |
-| **Log Formats** | ✅ Multiple formats (Compact, Pretty, JSON) | ❌ Limited |
-| **File Logging** | ✅ Built-in file appender with rotation | ❌ Not available |
-| **Configuration** | ✅ Builder pattern + environment variables | ⚠️ Manual setup required |
-| **Resource Management** | ✅ RAII automatic cleanup | ⚠️ Manual cleanup needed |
-| **HTTP Attributes** | ✅ Comprehensive (method, route, client_ip, host, user_agent, request_id, trace_id) | ⚠️ Basic attributes |
-| **OpenTelemetry Context** | ✅ Automatic parent context propagation | ⚠️ Manual setup |
-| **Microservices Support** | ✅ Complete observability stack examples | ⚠️ Basic integration |
-| **Sampling Configuration** | ✅ Easy sampling ratio configuration | ⚠️ Manual configuration |
+The main difference lies not in quality, but in **scope and philosophy**.
 
-### Why Choose `axum-otel`?
+### axum-tracing-opentelemetry
 
-1. **Out-of-the-box Metrics**: Built-in metrics collection and export capabilities without additional setup
-2. **Production Ready**: File logging with rotation, environment-based configuration, and automatic resource management
-3. **Better Developer Experience**: Simple builder pattern API that reduces boilerplate code
-4. **Complete Observability**: Full-stack solution with examples for microservices architectures
-5. **Rich HTTP Instrumentation**: Automatically captures comprehensive HTTP request/response attributes
+**axum-tracing-opentelemetry** is a well-designed, focused middleware that:
 
-If you need a simple tracing-only solution, `axum-tracing-opentelemetry` might suffice. However, for production applications requiring metrics, structured logging, and comprehensive observability, `axum-otel` provides significantly more value out of the box.
+* Provides **clean and lightweight HTTP tracing**
+* Emphasizes **simplicity and minimal overhead**
+* Integrates naturally with existing `tracing` and `tracing-subscriber` setups
+* Is easy to adopt when you only need **request-level spans and context propagation**
+
+For many applications, especially smaller services or teams that already have their own observability stack, **axum-tracing-opentelemetry is a great and perfectly sufficient choice**.
+
+### axum-otel (this crate)
+
+**axum-otel** builds on similar foundations, but targets a slightly different use case:
+
+* It aims to provide a **more opinionated, production-oriented observability setup**
+* In addition to tracing, it includes **built-in HTTP metrics instrumentation**
+* It offers **structured logging**, file logging with rotation, and unified configuration
+* It manages OpenTelemetry providers and exporters with **RAII-based lifecycle handling**
+
+The goal of axum-otel is to **reduce boilerplate and decision-making** when setting up observability for production or microservice-oriented systems.
+
+### Key Features of axum-otel
+
+**axum-otel** provides a comprehensive observability solution with the following key features:
+
+* **Tower Integration** - Built on top of `tower-http::TraceLayer`, seamlessly integrates with Axum's middleware system and follows Tower's service-oriented architecture
+* **JSON Logging Support** - Full support for structured JSON logging format, making it easy to integrate with log aggregation systems like Loki, Elasticsearch, or cloud logging services
+* **Multiple Log Formats** - Supports Compact, Pretty, and JSON log formats, allowing you to choose the best format for your environment (development vs production)
+* **Structured Logging** - Rich structured logging with customizable fields, making logs searchable and analyzable
+* **File Logging & Rotation** - Built-in file appender with automatic log rotation, perfect for production deployments
+* **Builder Pattern API** - Intuitive builder pattern for configuration, reducing boilerplate code
+* **HTTP Semantic Attributes** - Automatically captures comprehensive HTTP attributes (method, route, client_ip, host, user_agent, request_id, trace_id) following OpenTelemetry semantic conventions
+* **Metrics Collection** - Built-in HTTP metrics instrumentation with OTLP export support
+* **Environment Configuration** - Support for standard OpenTelemetry environment variables for flexible deployment configuration
+
+### Choosing Between Them
+
+* Choose **axum-tracing-opentelemetry** if:
+
+  * You want a **minimal, tracing-only solution**
+  * You prefer to assemble observability components yourself
+  * Low overhead and simplicity are your top priorities
+
+* Choose **axum-otel** if:
+
+  * You want **tracing, metrics, and logging to work together out of the box**
+  * You are building **production or microservice-based systems**
+  * You prefer a **single, cohesive observability setup** with fewer moving parts
+
+Both crates are actively maintained and follow best practices in the Rust and OpenTelemetry ecosystems.
+Which one to use ultimately depends on **your application’s complexity and observability needs**.
 
 ## 📦 Crates
 

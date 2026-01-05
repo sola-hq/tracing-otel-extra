@@ -227,7 +227,7 @@
 use crate::{
     logs::{
         create_output_layers,
-        layer::{deserialize_attributes, deserialize_log_format, LogFormat, LogRollingRotation},
+        layer::{LogFormat, LogRollingRotation, deserialize_attributes, deserialize_log_format},
         subscriber::setup_tracing,
     },
     otel::OtelGuard,
@@ -994,13 +994,16 @@ mod tests {
     fn test_env_file_appender_parsing() {
         #[cfg(feature = "env")]
         {
-            // 设置环境变量
-            std::env::set_var("LOG_FILE_ENABLE", "true");
-            std::env::set_var("LOG_FILE_FORMAT", "json");
-            std::env::set_var("LOG_FILE_DIR", "/var/log/test");
-            std::env::set_var("LOG_FILE_FILENAME_PREFIX", "test-app");
-            std::env::set_var("LOG_FILE_FILENAME_SUFFIX", "log");
-            std::env::set_var("LOG_FILE_MAX_LOG_FILES", "10");
+            #[allow(unsafe_code)]
+            unsafe {
+                // SAFETY: This is a test
+                std::env::set_var("LOG_FILE_ENABLE", "true");
+                std::env::set_var("LOG_FILE_FORMAT", "json");
+                std::env::set_var("LOG_FILE_DIR", "/var/log/test");
+                std::env::set_var("LOG_FILE_FILENAME_PREFIX", "test-app");
+                std::env::set_var("LOG_FILE_FILENAME_SUFFIX", "log");
+                std::env::set_var("LOG_FILE_MAX_LOG_FILES", "10");
+            }
 
             let result: Result<LoggerFileAppender, _> = envy::prefixed("LOG_FILE_").from_env();
             println!("Parse result: {:?}", result);

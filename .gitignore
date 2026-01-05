@@ -31,3 +31,4 @@ lcov.info
 *.zip
 *_backup
 logs/
+**/logs

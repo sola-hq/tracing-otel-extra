@@ -126,6 +126,7 @@ tokio = { version = "1.0", features = ["full"] }
 ```rust
 use axum::{routing::get, Router};
 use axum_otel::{AxumOtelSpanCreator, AxumOtelOnResponse, AxumOtelOnFailure};
+use tokio::net::TcpListener;
 use tower_http::trace::TraceLayer;
 use tracing::Level;
 
@@ -152,12 +153,9 @@ async fn main() {
         );
 
     // Start server
-    let addr = std::net::SocketAddr::from(([127, 0, 0, 1], 3000));
-    tracing::info!("Server listening on {}", addr);
-    axum::Server::bind(&addr)
-        .serve(app.into_make_service())
-        .await
-        .unwrap();
+    let listener = TcpListener::bind("127.0.0.1:3000").await.expect("Failed to bind to port 3000");
+    tracing::info!("Server listening on {}", listener.local_addr().expect("Failed to get local address"));
+    axum::serve(listener, app.into_make_service()).await.expect("Failed to serve application");
 }
 ```
 

@@ -46,7 +46,6 @@ impl OtelGuard {
     /// Manually shutdown all providers
     ///
     /// This method attempts to shut down all providers, even if some fail.
-    /// If multiple providers fail to shut down, only the first error is returned.
     pub fn shutdown(mut self) -> Result<()> {
         let mut errors = Vec::new();
         if let Some(tracer_provider) = self.tracer_provider.take() {

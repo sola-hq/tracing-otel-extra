@@ -10,10 +10,10 @@ members = [
 resolver = "2"
 
 [workspace.package]
-rust-version = "1.86"
+rust-version = "1.92.0"
 version = "0.31.4"
 authors = ["nivek <h49987180@gmail.com>"]
-edition = "2021"
+edition = "2024"
 license = "MIT/Apache-2.0"
 repository = "https://github.com/iamnivekx/tracing-otel-extra"
 documentation = "https://docs.rs/tracing-otel-extra/"
@@ -66,12 +66,16 @@ opentelemetry-otlp = { version = "0.31.0", features = [
     "reqwest-rustls",
 ] }
 
-tracing = { version = "0.1" }
+tracing = { version = "0.1.44" }
 tracing-opentelemetry = { version = "0.32.0" }
 tracing-subscriber = { version = "0.3", features = ["registry", "env-filter"] }
-tracing-appender = { version = "0.2.3" }
+tracing-appender = { version = "0.2.4" }
 
+# reqwest (used in examples)
 reqwest = { version = "0.12.24", features = ["json"] }
 reqwest-middleware = "0.4.2"
-reqwest-retry = "0.7.0"
+reqwest-retry = "0.8.0"
+# Note: reqwest-tracing doesn't support opentelemetry 0.31 yet
+# Using opentelemetry_0_30 feature for backward compatibility
+# Track: https://github.com/TrueLayer/reqwest-middleware/pull/249
 reqwest-tracing = { version = "0.5.8", features = ["opentelemetry_0_30"] }

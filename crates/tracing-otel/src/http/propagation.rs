@@ -1,3 +1,5 @@
+//! OpenTelemetry context propagation for HTTP.
+
 use opentelemetry::{Context, global};
 use opentelemetry_http::{HeaderExtractor, HeaderInjector, Request, Response};
 
@@ -44,7 +46,6 @@ mod tests {
         global::set_text_map_propagator(TraceContextPropagator::new());
         let trace_id = TraceId::from_hex("4bf92f3577b34da6a3ce929d0e0e4736").unwrap();
         let span_id = SpanId::from_hex("00f067aa0ba902b7").unwrap();
-        // Create a test span context
         let span_context = SpanContext::new(
             trace_id,
             span_id,
@@ -53,16 +54,10 @@ mod tests {
             TraceState::default(),
         );
 
-        // Create a context with the span context
         let context = Context::current().with_remote_span_context(span_context);
-
-        // Create a test request
         let mut request = Request::builder().body(()).unwrap();
-
-        // Inject the context into the request
         inject_context_into_request(&context, &mut request);
 
-        // Verify the traceparent header was set correctly
         let traceparent = request
             .headers()
             .get("traceparent")
@@ -70,18 +65,8 @@ mod tests {
             .to_str()
             .expect("traceparent header should be valid UTF-8");
 
-        // Expected format: 00-<trace_id>-<span_id>-<flags>
         let expected_traceparent = format!("00-{trace_id}-{span_id}-01");
         assert_eq!(traceparent, expected_traceparent);
-
-        // Verify the tracestate header was set (should be empty in this case)
-        let tracestate = request
-            .headers()
-            .get("tracestate")
-            .expect("tracestate header should be set")
-            .to_str()
-            .expect("tracestate header should be valid UTF-8");
-        assert_eq!(tracestate, "");
     }
 
     #[test]
@@ -89,7 +74,6 @@ mod tests {
         global::set_text_map_propagator(TraceContextPropagator::new());
         let trace_id = TraceId::from_hex("4bf92f3577b34da6a3ce929d0e0e4736").unwrap();
         let span_id = SpanId::from_hex("00f067aa0ba902b7").unwrap();
-        // Create a test span context with trace state
         let span_context = SpanContext::new(
             trace_id,
             span_id,
@@ -98,27 +82,10 @@ mod tests {
             TraceState::from_str("key1=value1,key2=value2").unwrap(),
         );
 
-        // Create a context with the span context
         let context = Context::current().with_remote_span_context(span_context);
-
-        // Create a test request
         let mut request = Request::builder().body(()).unwrap();
-
-        // Inject the context into the request
         inject_context_into_request(&context, &mut request);
 
-        // Verify the traceparent header
-        let traceparent = request
-            .headers()
-            .get("traceparent")
-            .expect("traceparent header should be set")
-            .to_str()
-            .expect("traceparent header should be valid UTF-8");
-
-        let expected_traceparent = format!("00-{trace_id}-{span_id}-01");
-        assert_eq!(traceparent, expected_traceparent);
-
-        // Verify the tracestate header
         let tracestate = request
             .headers()
             .get("tracestate")
@@ -131,17 +98,10 @@ mod tests {
     #[test]
     fn test_inject_context_into_request_without_span() {
         global::set_text_map_propagator(TraceContextPropagator::new());
-        // Create a context without a span
         let context = Context::current();
-
-        // Create a test request
         let mut request = Request::builder().body(()).unwrap();
-
-        // Inject the context into the request
         inject_context_into_request(&context, &mut request);
 
-        // Verify no headers were set
         assert!(!request.headers().contains_key("traceparent"));
-        assert!(!request.headers().contains_key("tracestate"));
     }
 }

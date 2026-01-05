@@ -58,14 +58,14 @@
 //! ```
 //!
 
-// Trace modules
+// HTTP tracing modules
 #[cfg(any(
     feature = "context",
     feature = "fields",
     feature = "http",
     feature = "span",
 ))]
-pub mod trace;
+pub mod http;
 
 // OpenTelemetry integration
 #[cfg(feature = "otel")]
@@ -75,7 +75,7 @@ pub mod otel {
 
 // Logging functionality
 #[cfg(any(feature = "logger", feature = "env"))]
-pub mod logs;
+pub mod logger;
 
 // Re-exports
 #[cfg(feature = "otel")]
@@ -83,31 +83,29 @@ pub use otel::*;
 
 // Logger module exports
 #[cfg(feature = "logger")]
-pub use logs::{FmtSpan, LogFormat, LogRollingRotation, Logger, LoggerFileAppender, init_logging};
+pub use logger::{
+    FmtSpan, LogFormat, LogRollingRotation, Logger, LoggerFileAppender, init_logging,
+};
 
 // Logger module exports
 #[cfg(feature = "env")]
-pub use logs::{init_logger_from_env, init_logging_from_env};
+pub use logger::{init_logger_from_env, init_logging_from_env};
 
 // Macros module exports
 #[cfg(feature = "macros")]
 pub mod macros;
 
-// Extra module exports
+// Extra module exports (backward compatibility)
 pub mod extract {
-
     #[cfg(feature = "context")]
-    pub use crate::trace::context;
+    pub use crate::http::context;
 
-    // Fields module exports
     #[cfg(feature = "fields")]
-    pub use crate::trace::fields;
+    pub use crate::http::fields;
 
-    // Http module exports
     #[cfg(feature = "http")]
-    pub use crate::trace::http;
+    pub use crate::http::propagation as http;
 
-    // Span module exports
     #[cfg(feature = "span")]
-    pub use crate::trace::span;
+    pub use crate::http::span;
 }

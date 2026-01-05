@@ -115,7 +115,7 @@ async fn create_article(
 #[tokio::main]
 async fn main() -> Result<()> {
     dotenvy::dotenv().ok();
-    let logger = Logger::from_env(Some("LOG_"))?;
+    let logger = Logger::from_env(Some("LOG"))?;
     let _guard = logger.init()?;
 
     let retry_policy = ExponentialBackoff::builder().build_with_max_retries(3);

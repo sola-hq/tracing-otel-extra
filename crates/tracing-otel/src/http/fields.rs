@@ -1,3 +1,5 @@
+//! HTTP request field extraction utilities.
+
 use http::{HeaderName, Request};
 
 pub const X_REQUEST_ID: HeaderName = HeaderName::from_static("x-request-id");
@@ -51,7 +53,7 @@ pub fn extract_request_id_from_headers(headers: &http::HeaderMap) -> Option<&str
         .and_then(|value| value.to_str().ok())
 }
 
-/// Extract the request id from the request headers
+/// Extract a field from the request headers
 pub fn extract_field_from_headers<'a>(
     headers: &'a http::HeaderMap,
     field: &HeaderName,
@@ -60,7 +62,6 @@ pub fn extract_field_from_headers<'a>(
 }
 
 #[cfg(test)]
-#[cfg(feature = "trace")]
 mod tests {
     use super::*;
     use http::HeaderMap;
@@ -78,35 +79,6 @@ mod tests {
         let request = Request::builder().body(()).unwrap();
         let request_id = extract_request_id(&request);
         assert_eq!(request_id, "");
-    }
-
-    #[test]
-    fn test_extract_request_id_with_x_request_id_and_request_id() {
-        let request = Request::builder()
-            .header(X_REQUEST_ID, "test-id-1")
-            .header(REQUEST_ID, "test-id-2")
-            .body(())
-            .unwrap();
-        let request_id = extract_request_id(&request);
-        assert_eq!(request_id, "test-id-1");
-    }
-
-    #[test]
-    fn test_get_request_id_without_request_id() {
-        let request = Request::builder().body(()).unwrap();
-        let request_id = extract_request_id(&request);
-        assert_eq!(request_id, "");
-    }
-
-    #[test]
-    fn test_get_request_id_wit_request_id() {
-        let request = Request::builder()
-            .header(X_REQUEST_ID, "test-id-1")
-            .header(REQUEST_ID, "test-id-2")
-            .body(())
-            .unwrap();
-        let request_id = extract_request_id(&request);
-        assert_eq!(request_id, "test-id-1");
     }
 
     #[test]

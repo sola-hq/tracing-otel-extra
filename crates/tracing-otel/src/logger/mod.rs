@@ -1,0 +1,80 @@
+//! OpenTelemetry logging configuration and initialization.
+//!
+//! This module provides a flexible and configurable logging system that integrates
+//! OpenTelemetry tracing and metrics. It offers both programmatic configuration
+//! through a builder pattern and environment variable-based configuration.
+//!
+//! # Features
+//!
+//! - Builder-style configuration API
+//! - Environment variable support (with "env" feature)
+//! - Multiple log formats (compact, pretty, json)
+//! - Configurable sampling and metrics collection
+//! - Custom resource attributes
+//! - Optional console output
+//! - Optional file output
+//!
+//! # Quick Start
+//!
+//! ```rust
+//! use tracing_otel_extra::Logger;
+//! use tracing::Level;
+//!
+//! #[tokio::main]
+//! async fn main() -> anyhow::Result<()> {
+//!     // Basic initialization with console output
+//!     let guard = Logger::new("my-service").init()?;
+//!
+//!     // Your application code here...
+//!
+//!     // The guard will automatically clean up when dropped
+//!     Ok(())
+//! }
+//! ```
+//!
+//! # Advanced Configuration
+//!
+//! ```rust
+//! use tracing_otel_extra::Logger;
+//! use tracing::Level;
+//! use opentelemetry::KeyValue;
+//!
+//! #[tokio::main]
+//! async fn main() -> anyhow::Result<()> {
+//!     let guard = Logger::new("my-service")
+//!         .with_level(Level::DEBUG)
+//!         .with_sample_ratio(0.5)
+//!         .with_metrics_interval_secs(60)
+//!         .with_console_enabled(true)
+//!         .with_attributes(vec![
+//!             KeyValue::new("environment", "production"),
+//!             KeyValue::new("version", "1.0.0"),
+//!         ])
+//!         .init()?;
+//!
+//!     // Your application code here...
+//!
+//!     Ok(())
+//! }
+//! ```
+
+mod config;
+mod deserialize;
+#[cfg(feature = "env")]
+mod env;
+mod init;
+mod subscriber;
+
+// Re-exports
+pub use config::{LogFormat, LogRollingRotation, Logger, LoggerFileAppender};
+pub use deserialize::default;
+#[cfg(feature = "env")]
+pub use env::{init_logger_from_env, init_logging_from_env};
+pub use init::{init_logging, init_tracing_from_logger};
+pub use subscriber::*;
+
+// Re-export FmtSpan
+pub use tracing_subscriber::fmt::format::FmtSpan;
+
+#[cfg(test)]
+mod tests;

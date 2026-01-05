@@ -86,3 +86,18 @@ jobs:
             ${{ runner.os }}-cargo-msrv-
       - name: Check MSRV
         run: cargo check --all-features
+
+  udeps:
+    name: udeps
+    runs-on: depot-ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+      - uses: rui314/setup-mold@v1
+      - uses: dtolnay/rust-toolchain@nightly
+      - uses: mozilla-actions/sccache-action@v0.0.9
+      - uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: true
+      - uses: taiki-e/install-action@cargo-udeps
+      - run: cargo udeps --workspace --lib --examples --tests --benches --all-features --locked

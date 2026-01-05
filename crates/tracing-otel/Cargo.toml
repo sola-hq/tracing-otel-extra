@@ -12,39 +12,6 @@ repository = "https://github.com/iamnivekx/tracing-otel-extra/tree/main/crates/t
 readme = "README.md"
 keywords = ["tracing", "opentelemetry", "logging"]
 
-[dependencies]
-anyhow = { workspace = true }
-
-serde = { workspace = true }
-serde_json = { workspace = true }
-
-http = { workspace = true, optional = true }
-
-# opentelemetry
-opentelemetry = { workspace = true, optional = true }
-opentelemetry-otlp = { workspace = true, optional = true }
-opentelemetry-http = { workspace = true, optional = true }
-
-# tracing and tracing-opentelemetry
-tracing = { workspace = true, optional = true }
-tracing-appender = { workspace = true, optional = true }
-tracing-subscriber = { workspace = true, features = ["json"], optional = true }
-tracing-opentelemetry = { workspace = true, optional = true }
-tracing-opentelemetry-extra = { workspace = true, optional = true }
-
-config = { workspace = true, optional = true }
-
-[dev-dependencies]
-opentelemetry-http = { workspace = true }
-tokio = { workspace = true }
-opentelemetry = { workspace = true }
-opentelemetry_sdk = { workspace = true }
-opentelemetry-otlp = { workspace = true }
-tracing = { workspace = true }
-tracing-opentelemetry = { workspace = true }
-tracing-subscriber = { workspace = true }
-serial_test = { workspace = true }
-
 [features]
 # Base dependencies
 fields = ["dep:http"]
@@ -77,5 +44,37 @@ logger = [
 # Feature combinations
 context = ["http"]
 span = ["context", "fields", "http", "macros"]
-trace = ["span"]
 env = ["dep:config", "logger"]
+
+[dependencies]
+anyhow = { workspace = true }
+
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+http = { workspace = true, optional = true }
+
+# opentelemetry
+opentelemetry = { workspace = true, optional = true }
+opentelemetry-http = { workspace = true, optional = true }
+opentelemetry-otlp = { workspace = true, optional = true }
+
+# tracing and tracing-opentelemetry
+tracing = { workspace = true, optional = true }
+tracing-appender = { workspace = true, optional = true }
+tracing-opentelemetry = { workspace = true, optional = true }
+tracing-opentelemetry-extra = { workspace = true, optional = true }
+tracing-subscriber = { workspace = true, features = ["json"], optional = true }
+
+config = { workspace = true, optional = true }
+
+[dev-dependencies]
+opentelemetry = { workspace = true }
+opentelemetry-http = { workspace = true }
+opentelemetry-otlp = { workspace = true }
+opentelemetry_sdk = { workspace = true }
+serial_test = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+tracing-opentelemetry = { workspace = true }
+tracing-subscriber = { workspace = true }

@@ -13,13 +13,16 @@ repository = "https://github.com/iamnivekx/tracing-otel-extra/tree/main/crates/t
 readme = "README.md"
 keywords = ["tracing", "opentelemetry"]
 
+[features]
+subscriber = ["dep:tracing-subscriber", "dep:opentelemetry-appender-tracing"]
+
 [dependencies]
 anyhow = { workspace = true }
 
 opentelemetry = { workspace = true }
-opentelemetry_sdk = { workspace = true }
-opentelemetry-otlp = { workspace = true }
 opentelemetry-appender-tracing = { workspace = true, optional = true }
+opentelemetry-otlp = { workspace = true }
+opentelemetry_sdk = { workspace = true }
 
 tracing = { workspace = true }
 tracing-opentelemetry = { workspace = true }
@@ -28,6 +31,3 @@ tracing-subscriber = { workspace = true, optional = true }
 
 [dev-dependencies]
 tokio = { workspace = true }
-
-[features]
-subscriber = ["dep:tracing-subscriber", "dep:opentelemetry-appender-tracing"]

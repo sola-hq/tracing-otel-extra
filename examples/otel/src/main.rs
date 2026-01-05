@@ -32,7 +32,7 @@ async fn health() -> &'static str {
 async fn main() -> Result<()> {
     dotenvy::dotenv().ok();
 
-    let mut logger = Logger::from_env(Some("LOG_"))?;
+    let mut logger = Logger::from_env(Some("LOG"))?;
     logger = logger.with_ansi(true);
     let _guard = logger.init()?;
 

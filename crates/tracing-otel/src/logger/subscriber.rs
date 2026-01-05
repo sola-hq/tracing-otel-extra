@@ -1,5 +1,7 @@
+//! Tracing subscriber setup and output layer management.
+
 use crate::{
-    logs::{LogFormat, Logger},
+    logger::{LogFormat, Logger},
     otel::{
         OtelGuard, get_resource, init_logger_provider, init_meter_provider, init_tracer_provider,
         init_tracing_subscriber, opentelemetry::KeyValue,
@@ -25,22 +27,6 @@ pub fn set_nonblocking_appender_guard(guard: WorkerGuard) -> Result<()> {
 }
 
 /// Creates an environment filter for tracing based on the given level.
-///
-/// This function attempts to create a filter from environment variables first,
-/// falling back to the provided level if no environment configuration is found.
-///
-/// # Arguments
-///
-/// * `level` - The default tracing level to use if no environment configuration is found
-///
-/// # Examples
-///
-/// ```rust
-/// use tracing_otel_extra::logs::init_env_filter;
-/// use tracing::Level;
-///
-/// let filter = init_env_filter(&Level::INFO);
-/// ```
 pub fn init_env_filter(level: &Level) -> EnvFilter {
     EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new(level.to_string()))
 }
@@ -82,12 +68,6 @@ where
 }
 
 /// Create output layers based on configuration.
-///
-/// This function creates output layers based on the provided configuration.
-///
-/// # Arguments
-///
-/// * `console_enabled` - Whether to enable console output
 pub fn create_output_layers(logger: &Logger) -> Result<Vec<BoxLayer>> {
     let mut layers: Vec<BoxLayer> = vec![];
 
@@ -139,59 +119,6 @@ pub fn create_output_layers(logger: &Logger) -> Result<Vec<BoxLayer>> {
 }
 
 /// Initializes the complete tracing stack with OpenTelemetry integration.
-///
-/// This function sets up the entire tracing infrastructure, including:
-/// - OpenTelemetry tracing
-/// - Metrics collection
-/// - Logs collection (when enable_otel_logs is true)
-/// - Log formatting
-/// - Environment filtering
-///
-/// # Arguments
-///
-/// * `service_name` - The name of your service
-/// * `attributes` - Additional key-value pairs to include in the resource
-/// * `sample_ratio` - The ratio of traces to sample (0.0 to 1.0)
-/// * `metrics_interval_secs` - The interval in seconds between metric collections
-/// * `level` - The default tracing level
-/// * `layers` - A vector of formatting layers for the tracing output
-/// * `enable_otel_logs` - Whether to enable OpenTelemetry logs export
-///
-/// # Returns
-///
-/// Returns a `Result` containing the configured `OtelGuard`,
-/// or an error if initialization fails.
-///
-/// # Examples
-///
-/// ```rust
-/// use tracing_otel_extra::logs::setup_tracing;
-/// use opentelemetry::KeyValue;
-/// use tracing::Level;
-/// use tracing_subscriber::fmt;
-/// use tracing_subscriber::fmt::Layer;
-/// use tracing_opentelemetry_extra::BoxLayer;
-///
-/// #[tokio::main]
-/// async fn main() -> anyhow::Result<()> {
-///     let layers: Vec<BoxLayer> = vec![Box::new(fmt::Layer::new().compact())];
-///     let guard = setup_tracing(
-///         "my-service",
-///         &[KeyValue::new("environment", "production")],
-///         1.0,
-///         30,
-///         Level::INFO,
-///         layers,
-///         true, // enable OTel logs
-///     )?;
-///
-///     // Your application code here...
-///
-///     // Cleanup when done
-///     guard.shutdown()?;
-///     Ok(())
-/// }
-/// ```
 pub fn setup_tracing(
     service_name: &str,
     attributes: &[KeyValue],

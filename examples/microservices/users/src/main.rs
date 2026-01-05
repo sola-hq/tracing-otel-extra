@@ -75,7 +75,7 @@ async fn create_user(State(state): State<AppState>, Json(payload): Json<CreateUs
 #[tokio::main]
 async fn main() -> Result<()> {
     dotenvy::dotenv().ok();
-    let mut logger = Logger::from_env(Some("LOG_"))?;
+    let mut logger = Logger::from_env(Some("LOG"))?;
     logger = logger.with_ansi(true);
     let _guard = logger.init()?;
 

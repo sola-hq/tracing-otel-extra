@@ -1026,14 +1026,16 @@ mod tests {
     fn test_simple_env_parsing() {
         #[cfg(feature = "env")]
         {
-            // 只设置最基本的字段
-            std::env::set_var("LOG_FILE_ENABLE", "true");
+            #[allow(unsafe_code)]
+            unsafe {
+                // SAFETY: This is a test
+                std::env::set_var("LOG_FILE_ENABLE", "true");
+            }
 
             println!("Testing simple env parsing...");
             let result: Result<LoggerFileAppender, _> = envy::prefixed("LOG_FILE_").from_env();
             println!("Simple parse result: {:?}", result);
 
-            // 即使只有 enable=true，也应该能解析成功
             let file_appender: Option<LoggerFileAppender> = result.ok();
             if let Some(fa) = file_appender {
                 println!(

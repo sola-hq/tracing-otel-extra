@@ -8,7 +8,7 @@
 
 use anyhow::{Context, Result};
 use opentelemetry::global;
-use opentelemetry_otlp::{Protocol, WithExportConfig, OTEL_EXPORTER_OTLP_PROTOCOL};
+use opentelemetry_otlp::{OTEL_EXPORTER_OTLP_PROTOCOL, Protocol, WithExportConfig};
 
 /// Environment variable for signal-specific traces protocol override.
 const OTEL_EXPORTER_OTLP_TRACES_PROTOCOL: &str = "OTEL_EXPORTER_OTLP_TRACES_PROTOCOL";
@@ -18,11 +18,11 @@ const OTEL_EXPORTER_OTLP_METRICS_PROTOCOL: &str = "OTEL_EXPORTER_OTLP_METRICS_PR
 const OTEL_EXPORTER_OTLP_LOGS_PROTOCOL: &str = "OTEL_EXPORTER_OTLP_LOGS_PROTOCOL";
 
 use opentelemetry_sdk::{
+    Resource,
     logs::SdkLoggerProvider,
     metrics::{MeterProviderBuilder, PeriodicReader, SdkMeterProvider},
     propagation::TraceContextPropagator,
     trace::{RandomIdGenerator, Sampler, SdkTracerProvider},
-    Resource,
 };
 use std::time::Duration;
 

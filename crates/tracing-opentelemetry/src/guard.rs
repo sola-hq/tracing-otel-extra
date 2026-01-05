@@ -48,21 +48,24 @@ impl OtelGuard {
     /// This method attempts to shut down all providers, even if some fail.
     pub fn shutdown(mut self) -> Result<()> {
         let mut errors = Vec::new();
-        if let Some(tracer_provider) = self.tracer_provider.take() {
-            if let Err(err) = tracer_provider.shutdown() {
-                errors.push(err);
-            }
+        if let Some(tracer_provider) = self.tracer_provider.take()
+            && let Err(err) = tracer_provider.shutdown()
+        {
+            errors.push(err);
         }
-        if let Some(meter_provider) = self.meter_provider.take() {
-            if let Err(err) = meter_provider.shutdown() {
-                errors.push(err);
-            }
+
+        if let Some(meter_provider) = self.meter_provider.take()
+            && let Err(err) = meter_provider.shutdown()
+        {
+            errors.push(err);
         }
-        if let Some(logger_provider) = self.logger_provider.take() {
-            if let Err(err) = logger_provider.shutdown() {
-                errors.push(err);
-            }
+
+        if let Some(logger_provider) = self.logger_provider.take()
+            && let Err(err) = logger_provider.shutdown()
+        {
+            errors.push(err);
         }
+
         match errors.is_empty() {
             true => Ok(()),
             false => Err(anyhow::anyhow!(
@@ -75,20 +78,20 @@ impl OtelGuard {
 // Drop the guard and shutdown the providers
 impl Drop for OtelGuard {
     fn drop(&mut self) {
-        if let Some(tracer_provider) = self.tracer_provider.take() {
-            if let Err(err) = tracer_provider.shutdown() {
-                eprintln!("Failed to shutdown tracer provider: {err:?}");
-            }
+        if let Some(tracer_provider) = self.tracer_provider.take()
+            && let Err(err) = tracer_provider.shutdown()
+        {
+            eprintln!("Failed to shutdown tracer provider: {err:?}");
         }
-        if let Some(meter_provider) = self.meter_provider.take() {
-            if let Err(err) = meter_provider.shutdown() {
-                eprintln!("Failed to shutdown meter provider: {err:?}");
-            }
+        if let Some(meter_provider) = self.meter_provider.take()
+            && let Err(err) = meter_provider.shutdown()
+        {
+            eprintln!("Failed to shutdown meter provider: {err:?}");
         }
-        if let Some(logger_provider) = self.logger_provider.take() {
-            if let Err(err) = logger_provider.shutdown() {
-                eprintln!("Failed to shutdown logger provider: {err:?}");
-            }
+        if let Some(logger_provider) = self.logger_provider.take()
+            && let Err(err) = logger_provider.shutdown()
+        {
+            eprintln!("Failed to shutdown logger provider: {err:?}");
         }
     }
 }

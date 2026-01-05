@@ -1,6 +1,6 @@
 use anyhow::Result;
 use axum::extract::Query;
-use axum::{routing::get, Router};
+use axum::{Router, routing::get};
 use axum_otel::{AxumOtelOnFailure, AxumOtelOnResponse, AxumOtelSpanCreator, Level};
 use serde::{Deserialize, Serialize};
 use tokio::net::TcpListener;

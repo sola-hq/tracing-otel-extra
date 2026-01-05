@@ -151,9 +151,9 @@ mod tests {
         assert!(deserialize_attributes::<StrDeserializer>("key1".into_deserializer()).is_err());
         assert!(deserialize_attributes::<StrDeserializer>("key1=".into_deserializer()).is_err());
         assert!(deserialize_attributes::<StrDeserializer>("=value1".into_deserializer()).is_err());
-        assert!(deserialize_attributes::<StrDeserializer>(
-            "key1=value1,invalid".into_deserializer()
-        )
-        .is_err());
+        assert!(
+            deserialize_attributes::<StrDeserializer>("key1=value1,invalid".into_deserializer())
+                .is_err()
+        );
     }
 }

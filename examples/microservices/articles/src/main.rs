@@ -1,12 +1,12 @@
 use anyhow::Result;
 use axum::{
+    Json, Router,
     extract::{Path, State},
     routing::{get, post},
-    Json, Router,
 };
 use axum_otel::{AxumOtelOnFailure, AxumOtelOnResponse, AxumOtelSpanCreator, Level};
 use reqwest_middleware::{ClientBuilder, ClientWithMiddleware};
-use reqwest_retry::{policies::ExponentialBackoff, RetryTransientMiddleware};
+use reqwest_retry::{RetryTransientMiddleware, policies::ExponentialBackoff};
 use reqwest_tracing::TracingMiddleware;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;

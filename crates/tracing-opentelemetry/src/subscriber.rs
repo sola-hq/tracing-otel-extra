@@ -6,7 +6,7 @@ use opentelemetry_sdk::{
 };
 use tracing::Level;
 use tracing_subscriber::{
-    layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Layer, Registry,
+    EnvFilter, Layer, Registry, layer::SubscriberExt, util::SubscriberInitExt,
 };
 
 pub type BoxLayer = Box<dyn Layer<Registry> + Sync + Send>;

@@ -111,9 +111,9 @@ mod tests {
     use super::*;
     use opentelemetry::trace::TraceContextExt as _;
     use opentelemetry::trace::TracerProvider as _;
-    use opentelemetry::{global, KeyValue};
-    use opentelemetry_sdk::propagation::TraceContextPropagator;
+    use opentelemetry::{KeyValue, global};
     use opentelemetry_sdk::Resource;
+    use opentelemetry_sdk::propagation::TraceContextPropagator;
     use tracing::{Level, Span};
     use tracing_opentelemetry::OpenTelemetrySpanExt as _;
     use tracing_subscriber::layer::SubscriberExt;

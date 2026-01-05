@@ -1,4 +1,4 @@
-use opentelemetry::{global, Context};
+use opentelemetry::{Context, global};
 use opentelemetry_http::{HeaderExtractor, HeaderInjector, Request, Response};
 
 /// Extract the context from the incoming request headers
@@ -31,11 +31,11 @@ pub fn inject_context_into_response<T>(context: &Context, response: &mut Respons
 #[cfg(feature = "http")]
 mod tests {
     use super::*;
+    use opentelemetry::Context;
     use opentelemetry::global;
     use opentelemetry::trace::{
         SpanContext, SpanId, TraceContextExt, TraceFlags, TraceId, TraceState,
     };
-    use opentelemetry::Context;
     use opentelemetry_sdk::propagation::TraceContextPropagator;
     use std::str::FromStr;
 

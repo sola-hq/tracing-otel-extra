@@ -5,7 +5,7 @@ use axum::{
 use opentelemetry::trace::SpanKind;
 use std::net::SocketAddr;
 use tower_http::trace::MakeSpan;
-use tracing::{field::Empty, Level};
+use tracing::{Level, field::Empty};
 use tracing_otel_extra::{
     dyn_span,
     extract::{context, fields},

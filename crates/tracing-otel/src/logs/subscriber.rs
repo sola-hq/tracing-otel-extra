@@ -1,18 +1,18 @@
 use crate::{
     logs::{LogFormat, Logger},
     otel::{
-        get_resource, init_logger_provider, init_meter_provider, init_tracer_provider,
-        init_tracing_subscriber, opentelemetry::KeyValue, OtelGuard,
+        OtelGuard, get_resource, init_logger_provider, init_meter_provider, init_tracer_provider,
+        init_tracing_subscriber, opentelemetry::KeyValue,
     },
 };
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result, anyhow};
 use std::sync::OnceLock;
 use tracing::Level;
 use tracing_appender::non_blocking::WorkerGuard;
 use tracing_opentelemetry_extra::BoxLayer;
 use tracing_subscriber::{
-    fmt::{self, format::FmtSpan, MakeWriter},
     EnvFilter, Layer, Registry,
+    fmt::{self, MakeWriter, format::FmtSpan},
 };
 
 // Keep non-blocking appender worker guard to prevent log loss
@@ -102,38 +102,38 @@ pub fn create_output_layers(logger: &Logger) -> Result<Vec<BoxLayer>> {
         layers.push(stdout_layer);
     }
     // Add file layer if configured and enabled
-    if let Some(config) = &logger.file_appender {
-        if config.enable {
-            let rolling_builder = tracing_appender::rolling::Builder::new()
-                .max_log_files(config.max_log_files)
-                .rotation(config.get_rolling_rotation());
+    if let Some(config) = &logger.file_appender
+        && config.enable
+    {
+        let rolling_builder = tracing_appender::rolling::Builder::new()
+            .max_log_files(config.max_log_files)
+            .rotation(config.get_rolling_rotation());
 
-            let file_appender = rolling_builder
-                .filename_prefix(config.filename_prefix_or_default())
-                .filename_suffix(config.filename_suffix_or_default())
-                .build(config.dir_or_default())
-                .context("Failed to build file appender")?;
+        let file_appender = rolling_builder
+            .filename_prefix(config.filename_prefix_or_default())
+            .filename_suffix(config.filename_suffix_or_default())
+            .build(config.dir_or_default())
+            .context("Failed to build file appender")?;
 
-            let file_appender_layer = if config.non_blocking {
-                let (non_blocking_file_appender, work_guard) =
-                    tracing_appender::non_blocking(file_appender);
-                set_nonblocking_appender_guard(work_guard)?;
-                init_layer(
-                    non_blocking_file_appender,
-                    &config.format_or_default(),
-                    logger.span_events.clone(),
-                    config.ansi,
-                )
-            } else {
-                init_layer(
-                    file_appender,
-                    &config.format_or_default(),
-                    logger.span_events.clone(),
-                    config.ansi,
-                )
-            };
-            layers.push(file_appender_layer);
-        }
+        let file_appender_layer = if config.non_blocking {
+            let (non_blocking_file_appender, work_guard) =
+                tracing_appender::non_blocking(file_appender);
+            set_nonblocking_appender_guard(work_guard)?;
+            init_layer(
+                non_blocking_file_appender,
+                &config.format_or_default(),
+                logger.span_events.clone(),
+                config.ansi,
+            )
+        } else {
+            init_layer(
+                file_appender,
+                &config.format_or_default(),
+                logger.span_events.clone(),
+                config.ansi,
+            )
+        };
+        layers.push(file_appender_layer);
     }
     Ok(layers)
 }

@@ -65,7 +65,7 @@ pub use guard::OtelGuard;
 pub use otel::{init_logger_provider, init_meter_provider, init_tracer_provider};
 pub use resource::get_resource;
 #[cfg(feature = "subscriber")]
-pub use subscriber::{init_env_filter, init_tracing_subscriber, BoxLayer};
+pub use subscriber::{BoxLayer, init_env_filter, init_tracing_subscriber};
 
 // Re-exports opentelemetry crates
 pub use opentelemetry;

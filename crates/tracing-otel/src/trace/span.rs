@@ -3,7 +3,7 @@ use crate::{
     extract::{context, fields},
 };
 use http::Request;
-use tracing::{field::Empty, Level, Span};
+use tracing::{Level, Span, field::Empty};
 
 /// Creates a new [`Span`] for the given request.
 /// you can use this span to record the request and response

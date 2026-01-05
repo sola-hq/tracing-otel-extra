@@ -1,11 +1,10 @@
 use anyhow::Result;
 use axum::{
+    Json, Router,
     extract::{Path, State},
     routing::{get, post},
-    Json, Router,
 };
 use axum_otel::{AxumOtelOnFailure, AxumOtelOnResponse, AxumOtelSpanCreator};
-
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tokio::net::TcpListener;

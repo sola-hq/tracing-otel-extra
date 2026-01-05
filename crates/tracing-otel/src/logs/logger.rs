@@ -239,6 +239,9 @@ use tracing::Level;
 use tracing_appender::rolling::Rotation;
 use tracing_subscriber::fmt::format::FmtSpan;
 
+#[cfg(feature = "env")]
+use config::{Config, Environment};
+
 /// Configuration for the OpenTelemetry tracing and logging system.
 ///
 /// This struct provides a builder-style API for configuring various aspects of
@@ -395,26 +398,13 @@ pub struct LoggerFileAppender {
 }
 
 impl LoggerFileAppender {
-    /// Merge configuration from Logger, using LoggerFileAppender values if set,
-    /// otherwise fall back to Logger values
+    /// Inherit `level` and `format` from Logger if not set in FileAppender.
+    /// Other fields retain their original values; defaults are handled by `*_or_default()` methods.
     pub fn merge_with_logger(&self, logger: &Logger) -> LoggerFileAppender {
         LoggerFileAppender {
-            enable: self.enable,
-            ansi: self.ansi,
-            non_blocking: self.non_blocking,
             level: self.level.or(Some(logger.level)),
             format: self.format.clone().or(Some(logger.format.clone())),
-            rotation: self.rotation.clone(),
-            dir: self.dir.clone().or(Some(default::dir())),
-            filename_prefix: self
-                .filename_prefix
-                .clone()
-                .or(Some(default::filename_prefix())),
-            filename_suffix: self
-                .filename_suffix
-                .clone()
-                .or(Some(default::filename_suffix())),
-            max_log_files: self.max_log_files,
+            ..self.clone()
         }
     }
 
@@ -467,6 +457,7 @@ where
             "FMT::ENTER" | "FmtSpan::ENTER" => FmtSpan::ENTER,
             "FMT::EXIT" | "FmtSpan::EXIT" => FmtSpan::EXIT,
             "FMT::CLOSE" | "FmtSpan::CLOSE" => FmtSpan::CLOSE,
+            "FMT::NONE" | "FmtSpan::NONE" => FmtSpan::NONE,
             "FMT::ACTIVE" | "FmtSpan::ACTIVE" => FmtSpan::ACTIVE,
             "FMT::FULL" | "FmtSpan::FULL" => return Ok(FmtSpan::FULL),
             _ => {
@@ -543,7 +534,7 @@ pub mod default {
         "./logs".to_string()
     }
 
-    /// Default filename prefix: app
+    /// Default filename prefix: combine
     pub fn filename_prefix() -> String {
         "combine".to_string()
     }
@@ -850,19 +841,19 @@ pub fn init_logging(service_name: &str) -> Result<OtelGuard> {
 
 #[cfg(feature = "env")]
 pub fn init_logger_from_env(prefix: Option<&str>) -> Result<Logger> {
-    let prefix = prefix.unwrap_or("LOG_");
-    let file_prefix = format!("{prefix}FILE_");
-    // file appender from env
-    let file_appender: Option<LoggerFileAppender> = envy::prefixed(&file_prefix).from_env().ok();
-    // logger from env
-    let mut logger: Logger = envy::prefixed(prefix)
-        .from_env()
+    let prefix = prefix.unwrap_or("LOG");
+    let file_prefix = format!("{prefix}_FILE");
+
+    let config = build_env_config(prefix)?;
+    let mut logger: Logger = config
+        .try_deserialize()
         .context("Failed to deserialize environment variables")?;
 
-    if let Some(file_appender) = file_appender {
+    if let Some(file_appender) = load_file_appender_from_env(&file_prefix) {
         let merged_file_appender = file_appender.merge_with_logger(&logger);
         logger = logger.with_file_appender(Some(merged_file_appender));
     }
+
     Ok(logger)
 }
 
@@ -872,11 +863,40 @@ pub fn init_logging_from_env(prefix: Option<&str>) -> Result<OtelGuard> {
     init_tracing_from_logger(logger)
 }
 
+#[cfg(feature = "env")]
+fn build_env_config(prefix: &str) -> Result<Config> {
+    // Note: We don't use list_separator here because:
+    // - `attributes` field has custom deserializer that parses "key=value,key2=value2" format
+    // - `span_events` field has custom deserializer that parses "FMT::NEW|FMT::CLOSE" format
+    // Using list_separator would cause string fields like `format` to be parsed as arrays.
+    let env_source = Environment::with_prefix(prefix).try_parsing(true);
+
+    Config::builder()
+        .add_source(env_source)
+        .build()
+        .context("Failed to read environment configuration")
+}
+
+#[cfg(feature = "env")]
+fn load_file_appender_from_env(prefix: &str) -> Option<LoggerFileAppender> {
+    // Note: We don't use separator("_") because LoggerFileAppender has flat fields
+    // like `filename_prefix`, not nested structures like `filename.prefix`.
+    let env_source = Environment::with_prefix(prefix).try_parsing(true);
+
+    let config = match Config::builder().add_source(env_source).build() {
+        Ok(c) => c,
+        Err(_) => return None,
+    };
+
+    config.try_deserialize().ok()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use opentelemetry::KeyValue;
     use serde_json;
+    use serial_test::serial;
 
     #[derive(Debug, serde::Deserialize)]
     struct TestFmtSpan {
@@ -885,6 +905,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_logger_builder() {
         let logger = Logger::new("test-service")
             .with_level(Level::DEBUG)
@@ -898,6 +919,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_deserialize_span_events_fmt_format() {
         // Test single values
         let result: TestFmtSpan = serde_json::from_str(r#"{"span_events": "FMT::NEW"}"#).unwrap();
@@ -923,6 +945,9 @@ mod tests {
         let result: TestFmtSpan = serde_json::from_str(r#"{"span_events": "FMT::FULL"}"#).unwrap();
         assert_eq!(result.span_events, FmtSpan::FULL);
 
+        let result: TestFmtSpan = serde_json::from_str(r#"{"span_events": "FMT::NONE"}"#).unwrap();
+        assert_eq!(result.span_events, FmtSpan::NONE);
+
         // Test with spaces
         let result: TestFmtSpan =
             serde_json::from_str(r#"{"span_events": " FMT::NEW | FMT::CLOSE "}"#).unwrap();
@@ -930,6 +955,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_deserialize_span_events_empty() {
         let result: TestFmtSpan = serde_json::from_str(r#"{"span_events": ""}"#).unwrap();
         assert_eq!(result.span_events, FmtSpan::NONE);
@@ -939,6 +965,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_deserialize_span_events_invalid() {
         let result: Result<TestFmtSpan, _> = serde_json::from_str(r#"{"span_events": "INVALID"}"#);
         assert!(result.is_err());
@@ -953,6 +980,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_logger_with_file_appender() {
         let file_appender = LoggerFileAppender {
             enable: true,
@@ -991,12 +1019,14 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_env_file_appender_parsing() {
         #[cfg(feature = "env")]
         {
+            // Set test values
             #[allow(unsafe_code)]
             unsafe {
-                // SAFETY: This is a test
+                // SAFETY: This is a test, and we hold the mutex to prevent concurrent access
                 std::env::set_var("LOG_FILE_ENABLE", "true");
                 std::env::set_var("LOG_FILE_FORMAT", "json");
                 std::env::set_var("LOG_FILE_DIR", "/var/log/test");
@@ -1005,52 +1035,62 @@ mod tests {
                 std::env::set_var("LOG_FILE_MAX_LOG_FILES", "10");
             }
 
-            let result: Result<LoggerFileAppender, _> = envy::prefixed("LOG_FILE_").from_env();
-            println!("Parse result: {:?}", result);
-
-            let file_appender: Option<LoggerFileAppender> = result.ok();
-            assert!(file_appender.is_some());
-
-            let file_appender = file_appender.unwrap();
+            let logger = init_logger_from_env(None).unwrap();
+            let file_appender = logger
+                .file_appender
+                .expect("file_appender should be Some when LOG_FILE_* vars are set");
             assert!(file_appender.enable);
             assert_eq!(file_appender.format, Some(LogFormat::Json));
             assert_eq!(file_appender.dir, Some("/var/log/test".to_string()));
             assert_eq!(file_appender.filename_prefix, Some("test-app".to_string()));
             assert_eq!(file_appender.filename_suffix, Some("log".to_string()));
             assert_eq!(file_appender.max_log_files, 10);
-            assert_eq!(file_appender.rotation, LogRollingRotation::Hourly); // 默认值
-        }
-    }
+            assert_eq!(file_appender.rotation, LogRollingRotation::Hourly);
 
-    #[test]
-    fn test_simple_env_parsing() {
-        #[cfg(feature = "env")]
-        {
+            // Restore original values
             #[allow(unsafe_code)]
             unsafe {
                 // SAFETY: This is a test
-                std::env::set_var("LOG_FILE_ENABLE", "true");
-            }
-
-            println!("Testing simple env parsing...");
-            let result: Result<LoggerFileAppender, _> = envy::prefixed("LOG_FILE_").from_env();
-            println!("Simple parse result: {:?}", result);
-
-            let file_appender: Option<LoggerFileAppender> = result.ok();
-            if let Some(fa) = file_appender {
-                println!(
-                    "Parsed file appender: enable={}, format={:?}, level={:?}",
-                    fa.enable, fa.format, fa.level
-                );
-                assert!(fa.enable);
-            } else {
-                println!("Failed to parse file appender");
-                assert!(false, "Should have parsed file appender");
+                std::env::remove_var("LOG_FILE_ENABLE");
+                std::env::remove_var("LOG_FILE_FORMAT");
+                std::env::remove_var("LOG_FILE_DIR");
+                std::env::remove_var("LOG_FILE_FILENAME_PREFIX");
+                std::env::remove_var("LOG_FILE_FILENAME_SUFFIX");
+                std::env::remove_var("LOG_FILE_MAX_LOG_FILES");
             }
         }
     }
 
     #[test]
+    #[serial]
+    fn test_simple_env_parsing() {
+        #[cfg(feature = "env")]
+        {
+            // Set test value - need to set enable field for LoggerFileAppender to be created
+            #[allow(unsafe_code)]
+            unsafe {
+                // SAFETY: This is a test, serialized to prevent concurrent access
+                std::env::set_var("LOG_FILE_ENABLE", "true");
+            }
+
+            let logger = init_logger_from_env(None).unwrap();
+            // file_appender should be Some when LOG_FILE_ENABLE is set
+            let file_appender = logger
+                .file_appender
+                .expect("file_appender should be Some when LOG_FILE_ENABLE is set");
+            assert!(file_appender.enable);
+
+            // Clean up
+            #[allow(unsafe_code)]
+            unsafe {
+                // SAFETY: This is a test, serialized to prevent concurrent access
+                std::env::remove_var("LOG_FILE_ENABLE");
+            }
+        }
+    }
+
+    #[test]
+    #[serial]
     fn test_logger_console_control() {
         // Test default console enabled
         let logger = Logger::new("test-service");
@@ -1066,6 +1106,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_logger_console_and_file_combination() {
         let file_appender = LoggerFileAppender {
             enable: true,

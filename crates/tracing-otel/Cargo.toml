@@ -32,7 +32,7 @@ tracing-subscriber = { workspace = true, features = ["json"], optional = true }
 tracing-opentelemetry = { workspace = true, optional = true }
 tracing-opentelemetry-extra = { workspace = true, optional = true }
 
-envy = { workspace = true, optional = true }
+config = { workspace = true, optional = true }
 
 [dev-dependencies]
 opentelemetry-http = { workspace = true }
@@ -43,6 +43,7 @@ opentelemetry-otlp = { workspace = true }
 tracing = { workspace = true }
 tracing-opentelemetry = { workspace = true }
 tracing-subscriber = { workspace = true }
+serial_test = { workspace = true }
 
 [features]
 # Base dependencies
@@ -77,4 +78,4 @@ logger = [
 context = ["http"]
 span = ["context", "fields", "http", "macros"]
 trace = ["span"]
-env = ["dep:envy", "logger"]
+env = ["dep:config", "logger"]

@@ -1,5 +1,6 @@
 use crate::extract::http::extract_context_from_headers;
 use opentelemetry::{SpanId, TraceId};
+use tracing::warn;
 
 /// The key for the trace id in the span attributes.
 pub const TRACE_ID: &str = "trace_id";
@@ -97,7 +98,7 @@ pub fn set_otel_parent(headers: &http::HeaderMap, span: &tracing::Span) {
     // This must be called immediately after span creation, before the span is used
     if let Err(e) = span.set_parent(remote_context) {
         // Log error but don't fail - this can happen if the span was already started
-        eprintln!("Failed to set parent on span: {:?}", e);
+        warn!("Failed to set parent on span: {:?}", e);
     }
 
     // Record the trace ID in the span for logging purposes

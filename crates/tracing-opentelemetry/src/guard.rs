@@ -2,6 +2,7 @@ use anyhow::Result;
 use opentelemetry_sdk::{
     logs::SdkLoggerProvider, metrics::SdkMeterProvider, trace::SdkTracerProvider,
 };
+use tracing::warn;
 
 /// A guard that holds the tracer provider, meter provider, and logger provider and ensures proper cleanup
 #[derive(Debug, Clone)]
@@ -81,17 +82,17 @@ impl Drop for OtelGuard {
         if let Some(tracer_provider) = self.tracer_provider.take()
             && let Err(err) = tracer_provider.shutdown()
         {
-            eprintln!("Failed to shutdown tracer provider: {err:?}");
+            warn!("Failed to shutdown tracer provider: {err:?}");
         }
         if let Some(meter_provider) = self.meter_provider.take()
             && let Err(err) = meter_provider.shutdown()
         {
-            eprintln!("Failed to shutdown meter provider: {err:?}");
+            warn!("Failed to shutdown meter provider: {err:?}");
         }
         if let Some(logger_provider) = self.logger_provider.take()
             && let Err(err) = logger_provider.shutdown()
         {
-            eprintln!("Failed to shutdown logger provider: {err:?}");
+            warn!("Failed to shutdown logger provider: {err:?}");
         }
     }
 }

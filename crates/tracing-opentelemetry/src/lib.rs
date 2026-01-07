@@ -71,3 +71,6 @@ pub use subscriber::{BoxLayer, init_env_filter, init_tracing_subscriber};
 pub use opentelemetry;
 pub use opentelemetry_sdk;
 pub use tracing_opentelemetry;
+
+// Macros module exports
+pub mod macros;

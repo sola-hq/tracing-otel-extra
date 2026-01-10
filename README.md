@@ -251,6 +251,89 @@ export RUST_LOG=debug
 export OTEL_RESOURCE_ATTRIBUTES='service.name=my-service,service.version=1.0.0'
 ```
 
+### OpenTelemetry
+
+All observability backends use the standard OTLP (OpenTelemetry Protocol) for data export. You can choose from the following options:
+
+#### 1: dockotlp (Self-Hosted Grafana Stack)
+
+[dockotlp](https://github.com/iamnivekx/dockotlp) provides a complete self-hosted observability stack with Grafana, Prometheus, Loki, Tempo, OpenTelemetry Collector, and more.
+
+Perfect for self-hosted deployments where you want full control over your observability infrastructure.
+
+**Quick Start:**
+
+Follow the [dockotlp Quick Start guide](https://github.com/iamnivekx/dockotlp?tab=readme-ov-file#quick-start) to set up the stack.
+
+**Configure your application:**
+
+```bash
+export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317
+export OTEL_EXPORTER_OTLP_PROTOCOL=grpc
+```
+
+#### 2: Grafana Cloud
+
+**Setup:**
+
+```bash
+# Grafana Cloud OTLP endpoint (replace with your region and instance URL)
+export OTEL_EXPORTER_OTLP_ENDPOINT=https://otlp-gateway-prod-<region>.grafana.net/otlp
+
+# Use HTTP/Protobuf protocol for Grafana Cloud
+export OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
+
+# Authentication header (Basic auth with instance ID and API token)
+# Format: Authorization=Basic <base64(instanceId:apiToken)>
+export OTEL_EXPORTER_OTLP_HEADERS="Authorization=Basic <your-base64-credentials>"
+```
+
+**Getting Grafana Cloud Credentials:**
+
+1. Log in to your Grafana Cloud account
+2. Navigate to **Connections** → **OpenTelemetry**
+3. Copy the **OTLP Endpoint URL** and **Basic Auth** credentials
+4. Set the environment variables as shown above
+
+**Example `.env` file for Grafana Cloud:**
+
+```bash
+OTEL_EXPORTER_OTLP_PROTOCOL="http/protobuf"
+OTEL_EXPORTER_OTLP_ENDPOINT="https://otlp-gateway-prod-ap-southeast-1.grafana.net/otlp"
+OTEL_EXPORTER_OTLP_HEADERS="Authorization=Basic <your-base64-credentials>"
+OTEL_RESOURCE_ATTRIBUTES="service.name=my-service,service.version=1.0.0"
+RUST_LOG=info
+```
+
+**Note:** Replace `<your-base64-credentials>` with your actual Base64-encoded credentials from Grafana Cloud. The format is `Base64(instanceId:apiToken)`.
+
+#### Option 3: Jaeger
+
+[Jaeger](https://www.jaegertracing.io/) is a popular open-source distributed tracing system, originally developed by Uber. It provides:
+- **Distributed Tracing** - End-to-end request tracing
+- **Jaeger UI** - Web-based trace visualization
+- **Multiple Storage Backends** - Supports various storage options (Elasticsearch, Cassandra, etc.)
+
+Great for teams already using Jaeger or preferring its specific features.
+
+**Setup:**
+
+```bash
+# Start Jaeger All-in-One (includes collector, query, and UI)
+docker run -d \
+  -p 6831:6831/udp \
+  -p 6832:6832/udp \
+  -p 16686:16686 \
+  -p 4317:4317 \
+  jaegertracing/all-in-one:latest
+
+# Configure your application
+export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317
+export OTEL_EXPORTER_OTLP_PROTOCOL=grpc
+```
+
+**Access Jaeger UI:** http://localhost:16686
+
 ### Sampling Configuration
 
 ```rust
@@ -333,3 +416,4 @@ at your option.
 - [GitHub Repository](https://github.com/iamnivekx/tracing-otel-extra)
 - [OpenTelemetry](https://opentelemetry.io/)
 - [Axum Framework](https://github.com/tokio-rs/axum)
+- [dockotlp](https://github.com/iamnivekx/dockotlp)
